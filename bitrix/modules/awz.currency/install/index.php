@@ -102,7 +102,7 @@ class awz_currency extends CModule {
         $this->createAgents();
 
         ModuleManager::RegisterModule($this->MODULE_ID);
-
+        LocalRedirect('/bitrix/admin/settings.php?lang='.LANG.'&mid='.$this->MODULE_ID.'&mid_menu=1');
         return true;
     }
 
