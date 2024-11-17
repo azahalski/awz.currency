@@ -110,12 +110,12 @@ class CursTable extends Entity\DataManager
         }
 
         if(!isset($currencyList[$cFrom])){
-            $result->addError(new Error('Не найден курс для валюты '.$cFrom.' на дату '.$date));
+            $result->addError(new Error(Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_ERR1').' '.$cFrom.' '.Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_ERR_DATE').' '.$date));
             return $result;
         }
 
         if(!isset($currencyList[$cTo])){
-            $result->addError(new Error('Не найден курс для валюты '.$cTo.' на дату '.$date));
+            $result->addError(new Error(Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_ERR1').' '.$cTo.' '.Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_ERR_DATE').' '.$date));
             return $result;
         }
 
@@ -366,7 +366,7 @@ class CursTable extends Entity\DataManager
                         'SEVERITY' => 'DEBUG',
                         'AUDIT_TYPE_ID' => 'RESPONSE',
                         'MODULE_ID' => Agents::MODULE,
-                        'DESCRIPTION' => "Курсы обновлены через прокси.\n" . "Дата: " . $date . ', провайдер: ' . $provider,
+                        'DESCRIPTION' => Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1').".\n" . Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1_LBLDATE').": " . $date . ', '.Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1_LBLPROV').': ' . $provider,
                     )
                 );
             } else {
@@ -374,7 +374,7 @@ class CursTable extends Entity\DataManager
                         'SEVERITY' => 'DEBUG',
                         'AUDIT_TYPE_ID' => 'RESPONSE',
                         'MODULE_ID' => Agents::MODULE,
-                        'DESCRIPTION' => "Курсы обновлены.\n" . "Дата: " . $date . ', провайдер: ' . $provider,
+                        'DESCRIPTION' => Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG2').".\n" . Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1_LBLDATE').": " . $date . ', '.Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1_LBLPROV').': ' . $provider,
                     )
                 );
             }
@@ -383,7 +383,7 @@ class CursTable extends Entity\DataManager
                     'SEVERITY' => 'ERROR',
                     'AUDIT_TYPE_ID' => 'RESPONSE',
                     'MODULE_ID' => Agents::MODULE,
-                    'DESCRIPTION' => "Ошибка обновления курсов."."\n"."Дата: ".$date."\n".implode("\n",$res->getErrorMessages()).', провайдер: '.$provider,
+                    'DESCRIPTION' => Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG3')."."."\n". Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1_LBLDATE').": ".$date."\n".implode("\n",$res->getErrorMessages()).', '.Loc::getMessage('AWZ_CURRENCY_CURS_FIELD_CURS_LOG1_LBLPROV').': '.$provider,
                 )
             );
 
