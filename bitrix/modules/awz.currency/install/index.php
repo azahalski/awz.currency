@@ -21,8 +21,11 @@ class awz_currency extends CModule {
     public function __construct()
     {
         $arModuleVersion = array();
-
         include(__DIR__.'/version.php');
+
+        $dirs = explode('/',dirname(__DIR__ . '../'));
+        $this->MODULE_ID = array_pop($dirs);
+        unset($dirs);
 
         $this->MODULE_VERSION = $arModuleVersion["VERSION"];
         $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
