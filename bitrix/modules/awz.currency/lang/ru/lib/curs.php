@@ -1,0 +1,7 @@
+<?
+$MESS["AWZ_CURRENCY_CURS_FIELD_ID"] = "Ид записи";
+$MESS["AWZ_CURRENCY_CURS_FIELD_CODE"] = "Код валюты";
+$MESS["AWZ_CURRENCY_CURS_FIELD_PROVIDER"] = "Провайдер (центробанк)";
+$MESS["AWZ_CURRENCY_CURS_FIELD_AMOUNT"] = "Курс";
+$MESS["AWZ_CURRENCY_CURS_FIELD_AMOUNT_CNT"] = "Количество";
+$MESS["AWZ_CURRENCY_CURS_FIELD_CURS_DATE"] = "Дата установки курса";
