@@ -1,5 +1,5 @@
 <?php
-$MESS['AWZ_CURRENCY_OPT_TITLE'] = 'Настройки модуля AWZ: Курсы валют РБ, РФ';
+$MESS['AWZ_CURRENCY_OPT_TITLE'] = 'Настройки модуля AWZ: Курсы валют НБРБ, ЦБРФ';
 $MESS['AWZ_CURRENCY_OPT_L_BTN_SAVE'] = 'Сохранить настройки';
 $MESS['AWZ_CURRENCY_OPT_SECT1'] = 'Основные параметры';
 $MESS['AWZ_CURRENCY_OPT_SECT2'] = 'Права доступа';
