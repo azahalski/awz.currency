@@ -15,6 +15,7 @@ $module_id = "awz.currency";
 if(!Loader::includeModule($module_id)) return;
 Extension::load('ui.sidepanel-content');
 $request = Application::getInstance()->getContext()->getRequest();
+$APPLICATION->SetTitle(Loc::getMessage('AWZ_CURRENCY_OPT_TITLE'));
 
 if($request->get('IFRAME_TYPE')==='SIDE_SLIDER'){
     require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
@@ -25,9 +26,6 @@ if($request->get('IFRAME_TYPE')==='SIDE_SLIDER'){
 
 if(!AccessController::isViewSettings())
     $APPLICATION->AuthForm(Loc::getMessage("ACCESS_DENIED"));
-
-$APPLICATION->SetTitle(Loc::getMessage('AWZ_CURRENCY_OPT_TITLE'));
-
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
 if ($request->getRequestMethod()==='POST' && AccessController::isEditSettings() && $request->get('Update'))
