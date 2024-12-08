@@ -36,47 +36,83 @@ class awz_currency extends CModule {
         $this->PARTNER_URI = Loc::getMessage("AWZ_PARTNER_URI");
     }
 
+    function DoInstall()
+    {
+        global $APPLICATION, $step;
+
+        $this->InstallFiles();
+        $this->InstallDB();
+        $this->checkOldInstallTables();
+        $this->InstallEvents();
+        $this->createAgents();
+
+        ModuleManager::RegisterModule($this->MODULE_ID);
+
+        $filePath = dirname(__DIR__ . '/../../options.php');
+        if(file_exists($filePath)){
+            LocalRedirect('/bitrix/admin/settings.php?lang='.LANG.'&mid='.$this->MODULE_ID.'&mid_menu=1');
+        }
+
+        return true;
+    }
+
+    function DoUninstall()
+    {
+        global $APPLICATION, $step;
+
+        $step = intval($step);
+        if($step < 2) { //выводим предупреждение
+            $APPLICATION->IncludeAdminFile(
+                Loc::getMessage('AWZ_CURRENCY_INSTALL_TITLE'),
+                $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/'. $this->MODULE_ID .'/install/unstep.php'
+            );
+        }
+        elseif($step == 2) {
+            //проверяем условие
+            if($_REQUEST['save'] != 'Y' && !isset($_REQUEST['save'])) {
+                $this->UnInstallDB();
+            }
+            $this->UnInstallFiles();
+            $this->UnInstallEvents();
+            $this->deleteAgents();
+
+            ModuleManager::UnRegisterModule($this->MODULE_ID);
+
+            return true;
+        }
+    }
+
     function InstallDB()
     {
         global $DB, $DBType, $APPLICATION;
+        $connection = \Bitrix\Main\Application::getConnection();
         $this->errors = false;
-        $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".mb_strtolower($DB->type)."/install.sql";
-        if(!file_exists($filePath)) return true;
-        $this->errors = $DB->RunSQLBatch($filePath);
-
-        if (!$this->errors) {
-            $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/" . mb_strtolower($DB->type) . "/access.sql";
-            if (file_exists($filePath)) {
-                $this->errors = $DB->RunSQLBatch($filePath);
-            }
+        if(!$this->errors && !$DB->TableExists('b_awz_currency')) {
+            $this->errors = $DB->RunSQLBatch($_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".$connection->getType()."/install.sql");
         }
-
+        if(!$this->errors && !$DB->TableExists(implode('_', explode('.',$this->MODULE_ID)).'_permission')) {
+            $this->errors = $DB->RunSQLBatch($_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/" . $this->MODULE_ID . "/install/db/".$connection->getType()."/access.sql");
+        }
         if (!$this->errors) {
             return true;
         } else {
             $APPLICATION->ThrowException(implode("", $this->errors));
             return $this->errors;
         }
-        return true;
     }
 
 
     function UnInstallDB()
     {
         global $DB, $DBType, $APPLICATION;
-
+        $connection = \Bitrix\Main\Application::getConnection();
         $this->errors = false;
-        $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".mb_strtolower($DB->type)."/uninstall.sql";
-        if(!file_exists($filePath)) return true;
-        $this->errors = $DB->RunSQLBatch($filePath);
-
         if (!$this->errors) {
-            $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/" . mb_strtolower($DB->type) . "/unaccess.sql";
-            if (file_exists($filePath)) {
-                $this->errors = $DB->RunSQLBatch($filePath);
-            }
+            $this->errors = $DB->RunSQLBatch($_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/" . $this->MODULE_ID . "/install/db/" . $connection->getType() . "/uninstall.sql");
         }
-
+        if (!$this->errors) {
+            $this->errors = $DB->RunSQLBatch($_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/" . $this->MODULE_ID . "/install/db/" . $connection->getType() . "/unaccess.sql");
+        }
         if (!$this->errors) {
             return true;
         }
@@ -129,50 +165,6 @@ class awz_currency extends CModule {
     {
         DeleteDirFilesEx("/bitrix/components/awz/currency.config.permissions");
         return true;
-    }
-
-    function DoInstall()
-    {
-        global $APPLICATION, $step;
-
-        $this->InstallFiles();
-        $this->InstallDB();
-		$this->checkOldInstallTables();
-        $this->InstallEvents();
-        $this->createAgents();
-
-        ModuleManager::RegisterModule($this->MODULE_ID);
-        $filePath = dirname(__DIR__ . '/../../options.php');
-        if(file_exists($filePath)){
-            LocalRedirect('/bitrix/admin/settings.php?lang='.LANG.'&mid='.$this->MODULE_ID.'&mid_menu=1');
-        }
-        return true;
-    }
-
-    function DoUninstall()
-    {
-        global $APPLICATION, $step;
-
-        $step = intval($step);
-        if($step < 2) { //выводим предупреждение
-            $APPLICATION->IncludeAdminFile(
-                Loc::getMessage('AWZ_CURRENCY_INSTALL_TITLE'),
-                $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/'. $this->MODULE_ID .'/install/unstep.php'
-            );
-        }
-        elseif($step == 2) {
-            //проверяем условие
-            if($_REQUEST['save'] != 'Y' && !isset($_REQUEST['save'])) {
-                $this->UnInstallDB();
-            }
-            $this->UnInstallFiles();
-            $this->UnInstallEvents();
-            $this->deleteAgents();
-
-            ModuleManager::UnRegisterModule($this->MODULE_ID);
-
-            return true;
-        }
     }
 
     function createAgents() {
