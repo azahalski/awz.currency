@@ -106,20 +106,19 @@ class awz_currency extends CModule {
         $eventManager = EventManager::getInstance();
         $eventManager->unRegisterEventHandler(
             'sale', 'OnAfterUserUpdate',
-            'awz.currency', '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+            $this->MODULE_ID, '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
         );
         $eventManager->unRegisterEventHandler(
             'sale', 'OnAfterUserAdd',
-            'awz.currency', '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+            $this->MODULE_ID, '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
         );
-        return true;
         return true;
     }
 
     function InstallFiles()
     {
         CopyDirFiles(
-            $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/components/awz/currency.config.permissions/",
+            $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/components/currency.config.permissions/",
             $_SERVER['DOCUMENT_ROOT']."/bitrix/components/awz/admin.config.permissions",
             true, true
         );
