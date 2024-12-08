@@ -119,7 +119,7 @@ class awz_currency extends CModule {
     {
         CopyDirFiles(
             $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/components/currency.config.permissions/",
-            $_SERVER['DOCUMENT_ROOT']."/bitrix/components/awz/admin.config.permissions",
+            $_SERVER['DOCUMENT_ROOT']."/bitrix/components/awz/currency.config.permissions",
             true, true
         );
         return true;
