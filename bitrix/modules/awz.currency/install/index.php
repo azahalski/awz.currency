@@ -43,6 +43,14 @@ class awz_currency extends CModule {
         $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".mb_strtolower($DB->type)."/install.sql";
         if(!file_exists($filePath)) return true;
         $this->errors = $DB->RunSQLBatch($filePath);
+
+        if (!$this->errors) {
+            $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/" . mb_strtolower($DB->type) . "/access.sql";
+            if (file_exists($filePath)) {
+                $this->errors = $DB->RunSQLBatch($filePath);
+            }
+        }
+
         if (!$this->errors) {
             return true;
         } else {
@@ -61,6 +69,14 @@ class awz_currency extends CModule {
         $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/".mb_strtolower($DB->type)."/uninstall.sql";
         if(!file_exists($filePath)) return true;
         $this->errors = $DB->RunSQLBatch($filePath);
+
+        if (!$this->errors) {
+            $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/modules/". $this->MODULE_ID ."/install/db/" . mb_strtolower($DB->type) . "/unaccess.sql";
+            if (file_exists($filePath)) {
+                $this->errors = $DB->RunSQLBatch($filePath);
+            }
+        }
+
         if (!$this->errors) {
             return true;
         }
@@ -73,21 +89,46 @@ class awz_currency extends CModule {
 
     function InstallEvents()
     {
+        $eventManager = EventManager::getInstance();
+        $eventManager->registerEventHandlerCompatible(
+            'main', 'OnAfterUserUpdate',
+            $this->MODULE_ID, '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+        );
+        $eventManager->registerEventHandlerCompatible(
+            'main', 'OnAfterUserAdd',
+            $this->MODULE_ID, '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+        );
         return true;
     }
 
     function UnInstallEvents()
     {
+        $eventManager = EventManager::getInstance();
+        $eventManager->unRegisterEventHandler(
+            'sale', 'OnAfterUserUpdate',
+            'awz.currency', '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+        );
+        $eventManager->unRegisterEventHandler(
+            'sale', 'OnAfterUserAdd',
+            'awz.currency', '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+        );
+        return true;
         return true;
     }
 
     function InstallFiles()
     {
+        CopyDirFiles(
+            $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/".$this->MODULE_ID."/install/components/awz/currency.config.permissions/",
+            $_SERVER['DOCUMENT_ROOT']."/bitrix/components/awz/admin.config.permissions",
+            true, true
+        );
         return true;
     }
 
     function UnInstallFiles()
     {
+        DeleteDirFilesEx("/bitrix/components/awz/currency.config.permissions");
         return true;
     }
 
@@ -102,7 +143,10 @@ class awz_currency extends CModule {
         $this->createAgents();
 
         ModuleManager::RegisterModule($this->MODULE_ID);
-        LocalRedirect('/bitrix/admin/settings.php?lang='.LANG.'&mid='.$this->MODULE_ID.'&mid_menu=1');
+        $filePath = dirname(__DIR__ . '/../../options.php');
+        if(file_exists($filePath)){
+            LocalRedirect('/bitrix/admin/settings.php?lang='.LANG.'&mid='.$this->MODULE_ID.'&mid_menu=1');
+        }
         return true;
     }
 
