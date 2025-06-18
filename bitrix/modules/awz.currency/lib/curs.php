@@ -2,6 +2,7 @@
 
 namespace Awz\Currency;
 
+use Awz\Currency\Parsers\ReservNbRb;
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Error;
 use Bitrix\Main\Loader;
@@ -284,12 +285,20 @@ class CursTable extends Entity\DataManager
 
         if($provider === 'nbrb'){
             $res = NbRb::getCursExternal($date);
+            if(!$res->isSuccess() && Option::get(Agents::MODULE, "LOAD_NBRB2", "","")=="Y"){
+                $res = ReservNbRb::getCursExternal($date);
+            }
             if($res->isSuccess()){
-
                 $data = $res->getData();
-                $currencyList = $data['result'];
+                $currencyList = $data['result']['data']['result'] ?? $data['result'];
 
                 foreach($currencyList as $curs){
+
+                    /* проверка ключей если курсы пришли с zahalski.dev */
+                    $curs['Cur_Abbreviation'] = $curs['CODE'] ?? $curs['Cur_Abbreviation'];
+                    $curs['Cur_OfficialRate'] = $curs['AMOUNT'] ?? $curs['Cur_OfficialRate'];
+                    $curs['Cur_Scale'] = $curs['AMOUNT_CNT'] ?? $curs['Cur_Scale'];
+                    $curs['Date'] = $curs['CURS_DATE'] ?? $curs['Date'];
 
                     if(!empty($activeCodes) && !in_array($curs['Cur_Abbreviation'], $activeCodes))
                         continue;
@@ -319,7 +328,6 @@ class CursTable extends Entity\DataManager
                     }
 
                 }
-
             }
         }elseif($provider == self::DEF_PROVIDER){
             $res = CbRf::getCursExternal($date);

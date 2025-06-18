@@ -7,11 +7,9 @@ use Bitrix\Main\Result;
 use Bitrix\Main\Error;
 use Bitrix\Main\Web\Json;
 
-class NbRb {
+class ReservNbRb {
 
-    const PROXY_URLS = [
-        'https://api.zahalski.dev/bitrix/services/main/ajax.php?action=awz:bxorm.api.hook.call&app=1&key=public&method=currency.pubcursnbrb'
-    ];
+    const API_URL = 'https://api.zahalski.dev/bitrix/services/main/ajax.php?action=awz:bxorm.api.hook.call&app=1&key=public&method=currency.pubcursnbrb';
 
     const MAX_TIMEOUT = 12;
 
@@ -28,24 +26,10 @@ class NbRb {
         $httpClient->setTimeout(static::MAX_TIMEOUT);
         $httpClient->setStreamTimeout(static::MAX_TIMEOUT);
 
-        $url = 'https://www.nbrb.by/api/exrates/rates?ondate='.
-            date('Y-n-j',strtotime($date)).'&periodicity=0';
-        if($proxy){
-            $proxyUrls = self::PROXY_URLS;
-            if(!isset($proxyUrls[($proxy-1)])){
-                $result->addError(new Error('proxy url not found'));
-                return $result;
-            }else{
-                $url = $proxyUrls[($proxy-1)].'&url='.urlencode($url);
-            }
-        }
-
-        $res = $httpClient->get($url);
+        $res = $httpClient->get(static::API_URL.'&date='.$date);
 
         if(!$res){
-
             $result->addError(new Error('empty response'));
-
         }else{
 
             try {
@@ -54,19 +38,31 @@ class NbRb {
                 $result->setData(array('result'=>$json));
 
                 /*
-                [Cur_ID] => 440
-                [Date] => 2022-05-30T00:00:00
-                [Cur_Abbreviation] => AUD
-                [Cur_Scale] => 1
-                [Cur_Name] => Австралийский доллар
-                [Cur_OfficialRate] => 1.8577
+                {
+                "status": "success",
+                "data": {
+                    "result": {
+                        "AUD": {
+                            "ID": "34151",
+                            "CODE": "AUD",
+                            "AMOUNT": "1.9399",
+                            "AMOUNT_CNT": "1",
+                            "CURS_DATE": "2025-06-18T00:00:00+03:00",
+                            "DESC_CODE": "AUD",
+                            "DESC_IS_MONTH": "N",
+                            "DESC_NAME": "..."
+                        }
+                    }
+                },
+                "errors": []
+                }
                 */
 
                 if(empty($json)){
                     $result->addError(
                         new Error('no values')
                     );
-                }else if(!isset($json[0]['Cur_ID'])){
+                }else if(!isset($json['data']['result']['USD']['AMOUNT'])){
                     $result->addError(
                         new Error('error formats')
                     );

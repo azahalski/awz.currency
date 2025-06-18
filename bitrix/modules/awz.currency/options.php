@@ -31,6 +31,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 if ($request->getRequestMethod()==='POST' && AccessController::isEditSettings() && $request->get('Update'))
 {
     Option::set($module_id, "LOAD_NBRB", $request->get("LOAD_NBRB")=='Y' ? 'Y' : 'N', "");
+    Option::set($module_id, "LOAD_NBRB2", $request->get("LOAD_NBRB2")=='Y' ? 'Y' : 'N', "");
     Option::set($module_id, "LOAD_CBRF", $request->get("LOAD_CBRF")=='Y' ? 'Y' : 'N', "");
     Option::set($module_id, "LOAD_PREW", $request->get("LOAD_PREW")=='Y' ? 'Y' : 'N', "");
     Option::set($module_id, "LOAD_BX", $request->get("LOAD_BX")=='Y' ? 'Y' : 'N', "");
@@ -74,7 +75,13 @@ $tabControl->Begin();
                 <input type="checkbox" value="Y" name="LOAD_NBRB" <?if ($val=="Y") echo "checked";?>></td>
             </td>
         </tr>
-
+        <tr>
+            <td style="width:200px;"><?=Loc::getMessage('AWZ_CURRENCY_OPT_LOAD_NBRB2_TITLE')?></td>
+            <td>
+                <?$val = Option::get($module_id, "LOAD_NBRB2", "N","");?>
+                <input type="checkbox" value="Y" name="LOAD_NBRB2" <?if ($val=="Y") echo "checked";?>></td>
+            </td>
+        </tr>
 
         <tr>
             <td style="width:200px;"><?=Loc::getMessage('AWZ_CURRENCY_OPT_LOAD_CBRF_TITLE')?></td>
