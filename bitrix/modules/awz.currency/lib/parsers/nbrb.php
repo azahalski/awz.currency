@@ -10,7 +10,7 @@ use Bitrix\Main\Web\Json;
 class NbRb {
 
     const PROXY_URLS = [
-        'https://api.zahalski.dev/bitrix/services/main/ajax.php?action=awz:bxorm.api.hook.call&app=1&key=public&method=currency.pubcursnbrb'
+        ''
     ];
 
     const MAX_TIMEOUT = 12;
