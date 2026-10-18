@@ -1,0 +1,365 @@
+{
+  "schema_version": "1.0",
+  "module": {
+    "code": "awz.currency"
+  },
+  "current_state": {
+    "status": "needs_review",
+    "last_run_id": "awz.currency-1792354974",
+    "archive_sha256": null,
+    "open_findings": 0,
+    "blocking_findings_open": 0,
+    "false_positive_findings": 0,
+    "accepted_risk_findings": 5,
+    "fixed_findings": 0,
+    "removed_findings": 0,
+    "total_findings": 5
+  },
+  "runs": [
+    {
+      "run_id": "awz.currency-1792354974",
+      "created_at": "2026-10-18T20:23:26+00:00",
+      "archive_sha256": null,
+      "scanner_request_id": "awz.currency-1792354974",
+      "input_summary": "Обнаружено 5 уязвимостей в 4 файлах при аудите модуля awz.currency (52 целевых файла, прочитано 28 PHP-файлов ядра и точки входа; lang-файлы и include.php без логики исключены). Максимальная severity: medium. Ключевые находки: CSRF на сохранение настроек модуля (options.php, POST без bitrix_sessid_post/check_bitrix_sessid — с последствий для курсов валют магазина через агенты) и отключение проверки TLS-сертификата (disableSslVerification) во всех трех парсерах курсов (cbrf/nbrb/reservnbrb), что позволяет MITM-атаку с подменой курсов валют и финансовым ущербом; плюс низкосеверный вывод значения опции без htmlspecialcharsbx (options.php:97). Отклоненные сигналы recon: 'Sink: OS command' в lib/access/model/usermodel.php:25,59 — это методы ->exec() ORM-запросов (Request->exec), а не выполнения процессов; 'Sink: SQL' в lib/access/handlers.php:15-31 — значения приводятся через (int) перед конкатенацией, инъекции нет; 'Sink: include' в options.php — включение только фиксированных файлов пролога/эпилога Bitrix; XML-парсинг в lib/parsers/cbrf.php через SimpleXMLElement без LIBXML_NOENT — XXE не воспроизводится; AJAX-контроллер install/components/currency.config.permissions/ajax.php имеет Authentication+Csrf на save/delete и проверку прав AccessController::can на все действия (load — только чтение); SQL в install/index.php — RunSQLBatch по фиксированным путям. Дополнительно: reservnbrb.php использует сторонний публичный API api.zahalski.dev как резервный источник курсов без проверки целостности данных — учтено в находке по данному файлу.",
+      "summary": {
+        "current_scan_findings": 5,
+        "severity_counts": {
+          "medium": 4,
+          "low": 1
+        },
+        "new_findings": 5,
+        "still_open_findings": 0,
+        "reopened_findings": 0,
+        "resolved_since_previous_run": 0
+      }
+    }
+  ],
+  "findings": [
+    {
+      "journal_finding_id": "JF-00001",
+      "fingerprint": "534014e2df6dfec425a7063590b7be4b",
+      "type": "CSRF",
+      "severity": "medium",
+      "status": "accepted_risk",
+      "first_seen_run_id": "awz.currency-1792354974",
+      "last_seen_run_id": "awz.currency-1792354974",
+      "resolved_run_id": null,
+      "original_location": {
+        "file": "options.php",
+        "line": "31-49,66,128-129"
+      },
+      "current_location": {
+        "file": "options.php",
+        "line": "31-49,66,128-129"
+      },
+      "latest_vulnerability": {
+        "file": "options.php",
+        "line": "31-49,66,128-129",
+        "type": "CSRF",
+        "severity": "medium",
+        "description": "Подтверждена CSRF на значимое state-changing действие: страница настроек модуля (options.php) обрабатывает POST-запрос сохранения опций (строки 31-49) без какой-либо проверки CSRF-токена. Форма (строка 66) не содержит bitrix_sessid_post(), в обработчике нет вызова check_bitrix_sessid() и нет $APPLICATION->GetGlobalUserType.../Csrf-фильтра — единственные проверки: метод POST и AccessController::isEditSettings() (права текущей сессии, которые CSRF-атака использует автоматически, т.к. cookie сессии отправляются браузером жертвы). Эксплойт: злоумышленник заманивает авторизованного администратора/оператора с правом settedit на страницу с автосабмитом формы на /bitrix/admin/settings.php?mid=awz.currency с произвольными значениями LOAD_NBRB/LOAD_CBRF/LOAD_BX_MAIN=Y и нужным атакующему LOAD_CODES. В результате подменяются настройки загрузки курсов и принудительно запускаются агенты Agents::getDayRf()/getDayRb()/updateBxCurs(), которые перезаписывают курсы валют в b_awz_currency и через CursTable::onAfterAdd / Agents::updateBxCurs() меняют курсы валют самого магазина (CCurrency::Update), что напрямую влияет на цены заказов. Additionally, запрос POST проходит и при отсутствии CSRF-защиты со стороннего origin без ограничения referer.",
+        "recommendation": "Добавить CSRF-защиту штатными средствами Bitrix: вывести <?=bitrix_sessid_post()?> в форму и в начале POST-обработчика вызвать check_bitrix_sessid() (либо GetModuleCurPageParam + сессид-проверку), прервав обработку при несовпадении токена.",
+        "fix": "Before:\n<form method=\"POST\" action=\"<?=$saveUrl?>\" id=\"FORMACTION\">\n...\nif ($request->getRequestMethod()==='POST' && AccessController::isEditSettings() && $request->get('Update'))\n{\n    Option::set($module_id, \"LOAD_NBRB\", ...);\n\nAfter:\n<form method=\"POST\" action=\"<?=$saveUrl?>\" id=\"FORMACTION\">\n    <?=bitrix_sessid_post()?>\n...\nif ($request->getRequestMethod()==='POST' && AccessController::isEditSettings() && $request->get('Update'))\n{\n    if (!check_bitrix_sessid()) { $APPLICATION->ThrowException('Session expired'); }\n    else {\n        Option::set($module_id, \"LOAD_NBRB\", ...);\n        // ... остальная запись опций\n    }\n}",
+        "reviewed": {
+          "oldSeverity": "medium",
+          "newSeverity": "medium",
+          "changed": false,
+          "category": "csrf-state-change",
+          "versionScope": "current",
+          "version": "current",
+          "currentVersionRelevance": "present-in-current-scan",
+          "action": "add-sessid-and-owner-checks",
+          "confidence": "medium",
+          "rationale": "Kept as medium because the finding describes state change without check_bitrix_sessid; raise only if cross-user deletion or higher-impact state change is confirmed."
+        },
+        "partner_disposition": {
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski",
+          "updated_at": "2026-10-18T20:24:46+00:00"
+        }
+      },
+      "events": [
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected",
+          "at": "2026-10-18T20:23:26+00:00",
+          "location": {
+            "file": "options.php",
+            "line": "31-49,66,128-129"
+          },
+          "status": "open"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        }
+      ]
+    },
+    {
+      "journal_finding_id": "JF-00002",
+      "fingerprint": "53f66bfabab851bba5cfcc45d2704305",
+      "type": "SSRF",
+      "severity": "medium",
+      "status": "accepted_risk",
+      "first_seen_run_id": "awz.currency-1792354974",
+      "last_seen_run_id": "awz.currency-1792354974",
+      "resolved_run_id": null,
+      "original_location": {
+        "file": "lib/parsers/cbrf.php",
+        "line": "29,31-43"
+      },
+      "current_location": {
+        "file": "lib/parsers/cbrf.php",
+        "line": "29,31-43"
+      },
+      "latest_vulnerability": {
+        "file": "lib/parsers/cbrf.php",
+        "line": "29,31-43",
+        "type": "SSRF",
+        "severity": "medium",
+        "description": "Подтверждено ослабление проверки TLS при загрузке курсов валют ЦБ РФ: $httpClient->disableSslVerification() (строка 29) полностью отключает проверку сертификата сервера (CURLOPT_SSL_VERIFYPEER/HOST), после чего выполняется запрос к источнику курсов (строки 31-43). Полученные по такому каналу данные (AMOUNT/AMOUNT_CNT) без какой-либо дополнительной верификации записываются в b_awz_currency (CursTable::updateCurs) и через CursTable::onAfterAdd / Agents::updateBxCurs() попадают в курсы валют магазина (CCurrency::Update), т.е. напрямую влияют на расчет цен. Атакующий в положении MITM (компрометированный Wi-Fi/DNS/BGP) может подменить ответ XML_daily.asp и навязать произвольные курсы валют, что приводит к финансовому ущербу (продажа по заниженным ценам) для всех заказов, рассчитанных до следующей успешной загрузки. Также при $proxy URL формируется конкатенацией без валидации, но PROXY_URLS пуст — риск ограничен. Аналогичное отключение TLS в lib/parsers/nbrb.php (строка 27) и lib/parsers/reservnbrb.php (строка 25) — связанные записи.",
+        "recommendation": "Не отключать проверку TLS-сертификата для запросов к финансовым источникам данных; оставить дефолтное поведение HttpClient (verify peer/host включено). При необходимости обхода проблемных окружений — вынести в явную опцию с предупреждением, а не в код по умолчанию.",
+        "fix": "Before:\n$httpClient = new HttpClient([\n    'socketTimeout'=>10,\n    'streamTimeout'=>10,\n]);\n$httpClient->setHeaders(array(...));\n$httpClient->disableSslVerification();\n\nAfter:\n$httpClient = new HttpClient([\n    'socketTimeout'=>10,\n    'streamTimeout'=>10,\n    // проверка сертификата включена по умолчанию; при необходимости — опция модуля\n    'disableSslVerification' => \\Bitrix\\Main\\Config\\Option::get('awz.currency', 'DISABLE_SSL_VERIFY', 'N') === 'Y',\n]);\n$httpClient->setHeaders(array(...));\n// вызов disableSslVerification() удален",
+        "reviewed": {
+          "oldSeverity": "medium",
+          "newSeverity": "medium",
+          "changed": false,
+          "category": "kept-as-reported",
+          "versionScope": "current",
+          "version": "current",
+          "currentVersionRelevance": "present-in-current-scan",
+          "action": "fix",
+          "confidence": "medium",
+          "rationale": "Severity left unchanged after review; no stronger Bitrix/BUS-specific downgrade condition was identified from the journal text alone."
+        },
+        "partner_disposition": {
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski",
+          "updated_at": "2026-10-18T20:24:46+00:00"
+        }
+      },
+      "events": [
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected",
+          "at": "2026-10-18T20:23:26+00:00",
+          "location": {
+            "file": "lib/parsers/cbrf.php",
+            "line": "29,31-43"
+          },
+          "status": "open"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        }
+      ]
+    },
+    {
+      "journal_finding_id": "JF-00003",
+      "fingerprint": "db63ba2d79e83d6ee9007162c3ad2cac",
+      "type": "SSRF",
+      "severity": "medium",
+      "status": "accepted_risk",
+      "first_seen_run_id": "awz.currency-1792354974",
+      "last_seen_run_id": "awz.currency-1792354974",
+      "resolved_run_id": null,
+      "original_location": {
+        "file": "lib/parsers/nbrb.php",
+        "line": "27,31-43"
+      },
+      "current_location": {
+        "file": "lib/parsers/nbrb.php",
+        "line": "27,31-43"
+      },
+      "latest_vulnerability": {
+        "file": "lib/parsers/nbrb.php",
+        "line": "27,31-43",
+        "type": "SSRF",
+        "severity": "medium",
+        "description": "Подтверждено ослабление проверки TLS при загрузке курсов валют НБ РБ: $httpClient->disableSslVerification() (строка 27) отключает проверку сертификата, после чего выполняется запрос к https://www.nbrb.by/api/exrates/rates (строки 31-43). Полученные курсы без верификации записываются в b_awz_currency и влияют на цены магазина через интеграцию с модулем currency (см. lib/curs.php:406-426, lib/agents.php:46-74). MITM-атакующий может навязать произвольные курсы валют → финансовый ущерб. Связанные записи: lib/parsers/cbrf.php (строка 29), lib/parsers/reservnbrb.php (строка 25).",
+        "recommendation": "Убрать disableSslVerification(); использовать дефолтную проверку сертификата HttpClient для всех исходящих запросов к источникам курсов.",
+        "fix": "Before:\n$httpClient = new HttpClient();\n$httpClient->setHeaders(array(...));\n$httpClient->disableSslVerification();\n$httpClient->setTimeout(static::MAX_TIMEOUT);\n\nAfter:\n$httpClient = new HttpClient();\n$httpClient->setHeaders(array(...));\n// disableSslVerification() удален — проверка TLS включена по умолчанию\n$httpClient->setTimeout(static::MAX_TIMEOUT);",
+        "reviewed": {
+          "oldSeverity": "medium",
+          "newSeverity": "medium",
+          "changed": false,
+          "category": "kept-as-reported",
+          "versionScope": "current",
+          "version": "current",
+          "currentVersionRelevance": "present-in-current-scan",
+          "action": "fix",
+          "confidence": "medium",
+          "rationale": "Severity left unchanged after review; no stronger Bitrix/BUS-specific downgrade condition was identified from the journal text alone."
+        },
+        "partner_disposition": {
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski",
+          "updated_at": "2026-10-18T20:24:46+00:00"
+        }
+      },
+      "events": [
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected",
+          "at": "2026-10-18T20:23:26+00:00",
+          "location": {
+            "file": "lib/parsers/nbrb.php",
+            "line": "27,31-43"
+          },
+          "status": "open"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        }
+      ]
+    },
+    {
+      "journal_finding_id": "JF-00004",
+      "fingerprint": "30e5c5ac96597ee6c7c5671e02606fe9",
+      "type": "SSRF",
+      "severity": "medium",
+      "status": "accepted_risk",
+      "first_seen_run_id": "awz.currency-1792354974",
+      "last_seen_run_id": "awz.currency-1792354974",
+      "resolved_run_id": null,
+      "original_location": {
+        "file": "lib/parsers/reservnbrb.php",
+        "line": "25,29"
+      },
+      "current_location": {
+        "file": "lib/parsers/reservnbrb.php",
+        "line": "25,29"
+      },
+      "latest_vulnerability": {
+        "file": "lib/parsers/reservnbrb.php",
+        "line": "25,29",
+        "type": "SSRF",
+        "severity": "medium",
+        "description": "Подтверждено ослабление проверки TLS при запросе резервного источника курсов (сторонний сервис api.zahalski.dev): $httpClient->disableSslVerification() (строка 25) отключает проверку сертификата, после чего выполняется запрос $httpClient->get(static::API_URL.'&date='.$date) (строка 29), где $date подставляется в URL без urlencode(). Резервные курсы используются при неудаче основного запроса НБ РБ (lib/curs.php:288-290) и так же влияют на цены магазина. Дополнительно: параметр $date не экранирован — при попадании в $date посторонних символов возможна модификация query-строки (ограниченный header/query injection в исходящий запрос); в текущих вызовах $date формируется внутри модуля (date('d.m.Y')), поэтому основной риск — MITM из-за отключенного TLS. Связанные записи: lib/parsers/cbrf.php, lib/parsers/nbrb.php.",
+        "recommendation": "Убрать disableSslVerification(); экранировать $date через urlencode() при подстановке в URL; рассмотреть проверку подписи/целостности данных резервного публичного API перед записью курсов в базу.",
+        "fix": "Before:\n$httpClient->disableSslVerification();\n...\n$res = $httpClient->get(static::API_URL.'&date='.$date);\n\nAfter:\n// disableSslVerification() удален — проверка TLS включена по умолчанию\n...\n$res = $httpClient->get(static::API_URL.'&date='.urlencode((string)$date));",
+        "reviewed": {
+          "oldSeverity": "medium",
+          "newSeverity": "medium",
+          "changed": false,
+          "category": "kept-as-reported",
+          "versionScope": "current",
+          "version": "current",
+          "currentVersionRelevance": "present-in-current-scan",
+          "action": "fix",
+          "confidence": "medium",
+          "rationale": "Severity left unchanged after review; no stronger Bitrix/BUS-specific downgrade condition was identified from the journal text alone."
+        },
+        "partner_disposition": {
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski",
+          "updated_at": "2026-10-18T20:24:46+00:00"
+        }
+      },
+      "events": [
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected",
+          "at": "2026-10-18T20:23:26+00:00",
+          "location": {
+            "file": "lib/parsers/reservnbrb.php",
+            "line": "25,29"
+          },
+          "status": "open"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        }
+      ]
+    },
+    {
+      "journal_finding_id": "JF-00005",
+      "fingerprint": "9de3087c616209969cc3bd9cbbae01d8",
+      "type": "Cross-Site Scripting",
+      "severity": "low",
+      "status": "accepted_risk",
+      "first_seen_run_id": "awz.currency-1792354974",
+      "last_seen_run_id": "awz.currency-1792354974",
+      "resolved_run_id": null,
+      "original_location": {
+        "file": "options.php",
+        "line": "97"
+      },
+      "current_location": {
+        "file": "options.php",
+        "line": "97"
+      },
+      "latest_vulnerability": {
+        "file": "options.php",
+        "line": "97",
+        "type": "Cross-Site Scripting",
+        "severity": "low",
+        "description": "Подозрение: значение опции LOAD_CODES выводится в атрибут value текстового поля без экранирования (value=\"<?=$val?>\", строка 97). Штатный путь записи (строка 39) очищает значение preg_replace('/([^A-Z,])/is','',...) до символов A-Z и запятой, что делает эксплуатацию через собственную форму затруднительной, однако: (1) сама запись опций защищена только от CSRF-уязвимости из соседней находки (options.php:31-49), т.е. при её наличии атакующий может попытаться сохранить значение и через другие пути записи Option::set; (2) атрибут HTML не экранирован — defense-in-depth нарушен, при ослаблении фильтра на сохранении возникает stored XSS в админке. Ограничение фильтра ([^A-Z,]) с флагом /is понижает практическую exploitability — поэтому low.",
+        "recommendation": "Экранировать вывод значения опции через htmlspecialcharsbx() при выводе в HTML; сохранять фильтрацию на записи как дополнительный слой, а не единственный.",
+        "fix": "Before:\n<input type=\"text\" name=\"LOAD_CODES\" value=\"<?=$val?>\">\n\nAfter:\n<input type=\"text\" name=\"LOAD_CODES\" value=\"<?=htmlspecialcharsbx($val)?>\">",
+        "reviewed": {
+          "oldSeverity": "low",
+          "newSeverity": "low",
+          "changed": false,
+          "category": "stored-xss-trusted-editor-content",
+          "versionScope": "current",
+          "version": "current",
+          "currentVersionRelevance": "present-in-current-scan",
+          "action": "harden-output-escaping",
+          "confidence": "high",
+          "rationale": "Downgraded because the journal describes a stored XSS source controlled by a Bitrix admin/content editor or another trusted content-management role. In BUS such users can normally publish HTML/JS through legitimate site-management mechanisms, so this is template hardening rather than a high module vulnerability unless a low-privileged/external source is proven."
+        },
+        "partner_disposition": {
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski",
+          "updated_at": "2026-10-18T20:24:46+00:00"
+        }
+      },
+      "events": [
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected",
+          "at": "2026-10-18T20:23:26+00:00",
+          "location": {
+            "file": "options.php",
+            "line": "97"
+          },
+          "status": "open"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        }
+      ]
+    }
+  ]
+}
