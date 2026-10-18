@@ -132,6 +132,16 @@ class awz_currency extends CModule {
             'main', 'OnAfterUserAdd',
             $this->MODULE_ID, '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
         );
+        // интеграция с awz.allxls: макросы курсов валют в правилах импорта
+        // (#AWZ_CURRENCY_<ПРОВАЙДЕР>_<КОД>#, см. lib/handlers.php)
+        $eventManager->registerEventHandler(
+            'awz.allxls', 'onAwzAllxlsGetMacros',
+            $this->MODULE_ID, '\\Awz\\Currency\\Handlers', 'onAwzAllxlsGetMacros'
+        );
+        $eventManager->registerEventHandler(
+            'awz.allxls', 'onAwzAllxlsExpandMacros',
+            $this->MODULE_ID, '\\Awz\\Currency\\Handlers', 'onAwzAllxlsExpandMacros'
+        );
         return true;
     }
 
@@ -145,6 +155,14 @@ class awz_currency extends CModule {
         $eventManager->unRegisterEventHandler(
             'sale', 'OnAfterUserAdd',
             $this->MODULE_ID, '\\Awz\\Currency\\Access\\Handlers', 'OnAfterUserUpdate'
+        );
+        $eventManager->unRegisterEventHandler(
+            'awz.allxls', 'onAwzAllxlsGetMacros',
+            $this->MODULE_ID, '\\Awz\\Currency\\Handlers', 'onAwzAllxlsGetMacros'
+        );
+        $eventManager->unRegisterEventHandler(
+            'awz.allxls', 'onAwzAllxlsExpandMacros',
+            $this->MODULE_ID, '\\Awz\\Currency\\Handlers', 'onAwzAllxlsExpandMacros'
         );
         return true;
     }

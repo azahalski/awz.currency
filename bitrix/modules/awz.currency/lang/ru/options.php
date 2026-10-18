@@ -10,3 +10,5 @@ $MESS['AWZ_CURRENCY_OPT_LOAD_PREW_TITLE'] = 'Брать последний до�
 $MESS['AWZ_CURRENCY_OPT_LOAD_CODES_TITLE'] = 'Коды валют для загрузки (перечислить через запятую)';
 $MESS['AWZ_CURRENCY_OPT_LOAD_BX_TITLE'] = 'Обновлять курсы на каждую дату в модуле currency';
 $MESS['AWZ_CURRENCY_OPT_LOAD_BX_MAIN_TITLE'] = 'Обновлять курсы по умолчанию в модуле currency';
+$MESS['AWZ_MAILTOTG_OPT_TGKEY'] = 'Токен доступа Телеграм-бота (без bot)';
+$MESS['AWZ_MAILTOTG_OPT_TGID'] = 'ID пользователя, канала или группы';
