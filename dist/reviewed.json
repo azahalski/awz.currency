@@ -27,7 +27,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       {
@@ -54,7 +54,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       {
@@ -81,7 +81,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       {
@@ -108,7 +108,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       {
@@ -135,7 +135,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       }
     ],
@@ -229,7 +229,7 @@
       ]
     },
     "feedbackSummary": {
-      "updatedAt": "2026-10-18T20:24:46+00:00",
+      "updatedAt": "2026-11-06T10:48:30+00:00",
       "applied": 5
     }
   }

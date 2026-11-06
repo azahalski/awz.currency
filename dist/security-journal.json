@@ -33,6 +33,24 @@
         "reopened_findings": 0,
         "resolved_since_previous_run": 0
       }
+    },
+    {
+      "run_id": "awz.currency-1792354974",
+      "created_at": "2026-11-06T10:45:29+00:00",
+      "archive_sha256": null,
+      "scanner_request_id": "awz.currency-1792354974",
+      "input_summary": "Обнаружено 5 уязвимостей в 4 файлах при аудите модуля awz.currency (52 целевых файла, прочитано 28 PHP-файлов ядра и точки входа; lang-файлы и include.php без логики исключены). Максимальная severity: medium. Ключевые находки: CSRF на сохранение настроек модуля (options.php, POST без bitrix_sessid_post/check_bitrix_sessid — с последствий для курсов валют магазина через агенты) и отключение проверки TLS-сертификата (disableSslVerification) во всех трех парсерах курсов (cbrf/nbrb/reservnbrb), что позволяет MITM-атаку с подменой курсов валют и финансовым ущербом; плюс низкосеверный вывод значения опции без htmlspecialcharsbx (options.php:97). Отклоненные сигналы recon: 'Sink: OS command' в lib/access/model/usermodel.php:25,59 — это методы ->exec() ORM-запросов (Request->exec), а не выполнения процессов; 'Sink: SQL' в lib/access/handlers.php:15-31 — значения приводятся через (int) перед конкатенацией, инъекции нет; 'Sink: include' в options.php — включение только фиксированных файлов пролога/эпилога Bitrix; XML-парсинг в lib/parsers/cbrf.php через SimpleXMLElement без LIBXML_NOENT — XXE не воспроизводится; AJAX-контроллер install/components/currency.config.permissions/ajax.php имеет Authentication+Csrf на save/delete и проверку прав AccessController::can на все действия (load — только чтение); SQL в install/index.php — RunSQLBatch по фиксированным путям. Дополнительно: reservnbrb.php использует сторонний публичный API api.zahalski.dev как резервный источник курсов без проверки целостности данных — учтено в находке по данному файлу.",
+      "summary": {
+        "current_scan_findings": 5,
+        "severity_counts": {
+          "medium": 4,
+          "low": 1
+        },
+        "new_findings": 0,
+        "still_open_findings": 5,
+        "reopened_findings": 0,
+        "resolved_since_previous_run": 0
+      }
     }
   ],
   "findings": [
@@ -77,7 +95,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       "events": [
@@ -95,6 +113,24 @@
           "run_id": "awz.currency-1792354974",
           "event": "partner_disposition_updated",
           "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected_again",
+          "at": "2026-11-06T10:45:29+00:00",
+          "location": {
+            "file": "options.php",
+            "line": "31-49,66,128-129"
+          },
+          "status": "accepted_risk"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-11-06T10:48:30+00:00",
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski"
@@ -142,7 +178,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       "events": [
@@ -160,6 +196,24 @@
           "run_id": "awz.currency-1792354974",
           "event": "partner_disposition_updated",
           "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected_again",
+          "at": "2026-11-06T10:45:29+00:00",
+          "location": {
+            "file": "lib/parsers/cbrf.php",
+            "line": "29,31-43"
+          },
+          "status": "accepted_risk"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-11-06T10:48:30+00:00",
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski"
@@ -207,7 +261,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       "events": [
@@ -225,6 +279,24 @@
           "run_id": "awz.currency-1792354974",
           "event": "partner_disposition_updated",
           "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected_again",
+          "at": "2026-11-06T10:45:29+00:00",
+          "location": {
+            "file": "lib/parsers/nbrb.php",
+            "line": "27,31-43"
+          },
+          "status": "accepted_risk"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-11-06T10:48:30+00:00",
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski"
@@ -272,7 +344,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       "events": [
@@ -290,6 +362,24 @@
           "run_id": "awz.currency-1792354974",
           "event": "partner_disposition_updated",
           "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected_again",
+          "at": "2026-11-06T10:45:29+00:00",
+          "location": {
+            "file": "lib/parsers/reservnbrb.php",
+            "line": "25,29"
+          },
+          "status": "accepted_risk"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-11-06T10:48:30+00:00",
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski"
@@ -337,7 +427,7 @@
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski",
-          "updated_at": "2026-10-18T20:24:46+00:00"
+          "updated_at": "2026-11-06T10:48:30+00:00"
         }
       },
       "events": [
@@ -355,6 +445,24 @@
           "run_id": "awz.currency-1792354974",
           "event": "partner_disposition_updated",
           "at": "2026-10-18T20:24:46+00:00",
+          "status": "accepted_risk",
+          "note": "",
+          "author": "Andrew Zahalski"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "detected_again",
+          "at": "2026-11-06T10:45:29+00:00",
+          "location": {
+            "file": "options.php",
+            "line": "97"
+          },
+          "status": "accepted_risk"
+        },
+        {
+          "run_id": "awz.currency-1792354974",
+          "event": "partner_disposition_updated",
+          "at": "2026-11-06T10:48:30+00:00",
           "status": "accepted_risk",
           "note": "",
           "author": "Andrew Zahalski"
