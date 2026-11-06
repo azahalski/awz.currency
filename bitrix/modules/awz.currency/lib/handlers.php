@@ -95,7 +95,9 @@ class Handlers
         );
         if ($newStr !== $str) {
             $event->setParameter('str', $newStr);
-            $event->addResult(new EventResult(EventResult::SUCCESS, []));
+            $event->addResult(new EventResult(EventResult::SUCCESS, [
+                'str'=>$newStr
+            ]));
         }
     }
 
@@ -110,15 +112,33 @@ class Handlers
      */
     protected static function getCursValue(string $provider, string $code): string
     {
+        $provider = mb_strtolower($provider);
         try {
             if (!isset(self::$cursCache[$provider])) {
                 if (!Loader::includeModule(self::MODULE)) {
                     return '';
                 }
-                self::$cursCache[$provider] = CursTable::getCurs(date('d.m.Y'), $provider);
+                $curs = CursTable::getCurs(date('d.m.Y'), $provider);
+                // курса на текущую дату нет (агент еще не отработал, выходные,
+                // сбой загрузки): берем последний доступный курс провайдера.
+                // Иначе макрос раскрывается в пустую строку и арифметические
+                // правила (formula/mul и т.п.) молча возвращают исходное значение
+                if (empty($curs)) {
+                    $curs = CursTable::getLastActiveCurs(
+                        new \Bitrix\Main\Type\DateTime(),
+                        $provider
+                    );
+                }
+                self::$cursCache[$provider] = is_array($curs) ? $curs : [];
             }
             $data = self::$cursCache[$provider][$code] ?? null;
             if (!$data || !isset($data['AMOUNT'])) {
+                \CEventLog::Add([
+                    'AUDIT_TYPE_ID' => 'AWZ_CURRENCY_MACRO',
+                    'MODULE_ID' => self::MODULE,
+                    'DESCRIPTION' => 'Курс не найден: провайдер '.$provider.', валюта '.$code
+                        .' (нет данных в b_awz_currency)',
+                ]);
                 return '';
             }
             $cnt = max(1, (int)($data['AMOUNT_CNT'] ?? 1));
